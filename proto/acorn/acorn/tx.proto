@@ -1,0 +1,13 @@
+syntax = "proto3";
+package acorn.acorn;
+
+// this line is used by starport scaffolding # proto/tx/import
+
+option go_package = "github.com/acorn-chain/acorn/x/acorn/types";
+
+// Msg defines the Msg service.
+service Msg {
+    // this line is used by starport scaffolding # proto/tx/rpc
+}
+
+// this line is used by starport scaffolding # proto/tx/message
