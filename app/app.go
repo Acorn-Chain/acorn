@@ -1128,7 +1128,6 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibcexported.ModuleName)
 	paramsKeeper.Subspace(acornmoduletypes.ModuleName)
-	paramsKeeper.Subspace(samoduletypes.ModuleName)
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	// ethermint subspaces
 	paramsKeeper.Subspace(evmtypes.ModuleName).WithKeyTable(evmtypes.ParamKeyTable()) //nolint:staticcheck
