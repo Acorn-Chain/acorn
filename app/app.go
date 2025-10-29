@@ -9,6 +9,20 @@ import (
 
 	simappparams "cosmossdk.io/simapp/params"
 
+	v703 "github.com/acorn-chain/acorn/app/upgrades/v0.7.3"
+
+	v500 "github.com/acorn-chain/acorn/app/upgrades/v0.5.0"
+	v501 "github.com/acorn-chain/acorn/app/upgrades/v0.5.1"
+	v600 "github.com/acorn-chain/acorn/app/upgrades/v0.6.0"
+	v601 "github.com/acorn-chain/acorn/app/upgrades/v0.6.1"
+	v700 "github.com/acorn-chain/acorn/app/upgrades/v0.7.0"
+	v701 "github.com/acorn-chain/acorn/app/upgrades/v0.7.1"
+	v702 "github.com/acorn-chain/acorn/app/upgrades/v0.7.2"
+
+	ibcupgrade "github.com/acorn-chain/acorn/app/upgrades/ibcupgrade"
+	v081 "github.com/acorn-chain/acorn/app/upgrades/v0.8.1"
+	v093 "github.com/acorn-chain/acorn/app/upgrades/v0.9.3"
+
 	"github.com/acorn-chain/acorn/app/internal"
 
 	"github.com/acorn-chain/acorn/app/utils"
@@ -109,6 +123,10 @@ import (
 	acornmodulekeeper "github.com/acorn-chain/acorn/x/acorn/keeper"
 	acornmoduletypes "github.com/acorn-chain/acorn/x/acorn/types"
 
+	samodule "github.com/acorn-chain/acorn/x/smartaccount"
+	samodulekeeper "github.com/acorn-chain/acorn/x/smartaccount/keeper"
+	samoduletypes "github.com/acorn-chain/acorn/x/smartaccount/types"
+
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
@@ -153,6 +171,16 @@ import (
 	"github.com/evmos/evmos/v18/x/feemarket"
 	feemarketkeeper "github.com/evmos/evmos/v18/x/feemarket/keeper"
 	feemarkettypes "github.com/evmos/evmos/v18/x/feemarket/types"
+
+	v0_3_0 "github.com/acorn-chain/acorn/app/upgrades/v0.3.0"
+	v0_3_1 "github.com/acorn-chain/acorn/app/upgrades/v0.3.1"
+	v0_3_2 "github.com/acorn-chain/acorn/app/upgrades/v0.3.2"
+	v0_3_3 "github.com/acorn-chain/acorn/app/upgrades/v0.3.3"
+	v0_4_0 "github.com/acorn-chain/acorn/app/upgrades/v0.4.0"
+	v0_4_1 "github.com/acorn-chain/acorn/app/upgrades/v0.4.1"
+	v0_4_2 "github.com/acorn-chain/acorn/app/upgrades/v0.4.2"
+	v0_4_4 "github.com/acorn-chain/acorn/app/upgrades/v0.4.4"
+	v0_4_5 "github.com/acorn-chain/acorn/app/upgrades/v0.4.5"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	authvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting"
@@ -259,6 +287,7 @@ var (
 		transfer.AppModuleBasic{AppModuleBasic: &ibctransfer.AppModuleBasic{}},
 		authvesting.AppModuleBasic{},
 		acornmodule.AppModuleBasic{},
+		samodule.AppModuleBasic{},
 		wasm.AppModuleBasic{},
 		ibc_hooks.AppModuleBasic{},
 		evm.AppModuleBasic{},
@@ -346,6 +375,8 @@ type App struct {
 
 	AcornKeeper acornmodulekeeper.Keeper
 
+	SaKeeper samodulekeeper.Keeper
+
 	// Middleware wrapper
 	Ics20WasmHooks   *ibc_hooks.WasmHooks
 	HooksICS4Wrapper ibc_hooks.ICS4Middleware
@@ -400,6 +431,7 @@ func New(
 		govtypes.StoreKey, paramstypes.StoreKey, consensusparamtypes.StoreKey, ibcexported.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		evidencetypes.StoreKey, ibctransfertypes.StoreKey, capabilitytypes.StoreKey,
 		acornmoduletypes.StoreKey,
+		samoduletypes.StoreKey,
 		authzkeeper.StoreKey,
 		wasmtypes.StoreKey,
 		ibchookstypes.StoreKey,
@@ -657,6 +689,19 @@ func New(
 	)
 	app.ContractKeeper = wasmkeeper.NewDefaultPermissionKeeper(&app.WasmKeeper)
 
+	app.SaKeeper = samodulekeeper.NewKeeper(
+		appCodec,
+		keys[samoduletypes.StoreKey],
+		keys[samoduletypes.MemStoreKey],
+		app.GetSubspace(samoduletypes.ModuleName),
+		app.WasmKeeper,
+		app.ContractKeeper,
+		app.AccountKeeper,
+	)
+
+	// sa module
+	saModule := samodule.NewAppModule(appCodec, app.SaKeeper, app.ContractKeeper, app.AccountKeeper)
+
 	// Pass the contract keeper to ICS4Wrappers for ibc middlewares
 	// app.Ics20WasmHooks.ContractKeeper = &app.WasmKeeper
 
@@ -715,6 +760,7 @@ func New(
 		// IBC modules
 		ibc_hooks.NewAppModule(app.AccountKeeper),
 		acornModule,
+		saModule,
 		wasm.NewAppModule(appCodec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
 
 		// Ethermint app modules
@@ -756,6 +802,7 @@ func New(
 		ibctransfertypes.ModuleName,
 		acornmoduletypes.ModuleName,
 		wasmtypes.ModuleName,
+		samoduletypes.ModuleName,
 		ibchookstypes.ModuleName,
 		// evmos module
 		erc20types.ModuleName,
@@ -789,6 +836,7 @@ func New(
 		ibctransfertypes.ModuleName,
 		acornmoduletypes.ModuleName,
 		wasmtypes.ModuleName,
+		samoduletypes.ModuleName,
 		ibchookstypes.ModuleName,
 		// evmos module
 		erc20types.ModuleName,
@@ -818,6 +866,8 @@ func New(
 		// NOTE: feemarket module needs to be initialized before genutil module:
 		// gentx transactions use MinGasPriceDecorator.AnteHandle
 		feemarkettypes.ModuleName,
+		// samodule must occur before genutil so that DeliverGenTx can successfully pass the smart account ante handler
+		samoduletypes.ModuleName,
 		genutiltypes.ModuleName,
 		evidencetypes.ModuleName,
 		ibctransfertypes.ModuleName,
@@ -858,6 +908,7 @@ func New(
 		vestingtypes.ModuleName,
 		consensusparamtypes.ModuleName,
 		wasmtypes.ModuleName,
+		samoduletypes.ModuleName,
 		crisistypes.ModuleName,
 		ibchookstypes.ModuleName,
 		evmtypes.ModuleName,
@@ -917,6 +968,7 @@ func New(
 	postHandler, err := NewPostHandler(
 		PostHandlerOptions{
 			HandlerOptions:     posthandler.HandlerOptions{},
+			SmartAccountKeeper: app.SaKeeper,
 		},
 	)
 	if err != nil {
@@ -1128,6 +1180,7 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
 	paramsKeeper.Subspace(ibcexported.ModuleName)
 	paramsKeeper.Subspace(acornmoduletypes.ModuleName)
+	paramsKeeper.Subspace(samoduletypes.ModuleName)
 	paramsKeeper.Subspace(wasmtypes.ModuleName)
 	// ethermint subspaces
 	paramsKeeper.Subspace(evmtypes.ModuleName).WithKeyTable(evmtypes.ParamKeyTable()) //nolint:staticcheck
@@ -1140,6 +1193,128 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 }
 
 func (app *App) setupUpgradeHandlers() {
+	// v0.3.0 upgrade handler
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v0_3_0.UpgradeName,
+		v0_3_0.CreateUpgradeHandler(app.mm, app.configurator),
+	)
+
+	// v0.3.1 upgrade handler
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v0_3_1.UpgradeName,
+		v0_3_1.CreateUpgradeHandler(app.mm, app.configurator),
+	)
+
+	// v0.3.2 upgrade handler
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v0_3_2.UpgradeName,
+		v0_3_2.CreateUpgradeHandler(app.mm, app.configurator),
+	)
+
+	// v0.3.3 upgrade handler
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v0_3_3.UpgradeName,
+		v0_3_3.CreateUpgradeHandler(app.mm, app.configurator),
+	)
+
+	// v0.4.0 upgrade handler
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v0_4_0.UpgradeName,
+		v0_4_0.CreateUpgradeHandler(app.mm, app.configurator),
+	)
+
+	// v0.4.1 upgrade handler
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v0_4_1.UpgradeName,
+		v0_4_1.CreateUpgradeHandler(app.mm, app.configurator),
+	)
+
+	// v0.4.2 upgrade handler
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v0_4_2.UpgradeName,
+		v0_4_2.CreateUpgradeHandler(app.mm, app.configurator),
+	)
+
+	// v0.4.4 upgrade handler
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v0_4_4.UpgradeName,
+		v0_4_4.CreateUpgradeHandler(app.mm, app.configurator),
+	)
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v0_4_5.UpgradeName,
+		v0_4_5.CreateUpgradeHandler(app.mm, app.configurator),
+	)
+
+	// v0.5.0 upgrade handler add new module
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v500.UpgradeName,
+		v500.CreateUpgradeHandler(app.mm, app.configurator),
+	)
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v501.UpgradeName,
+		v501.CreateUpgradeHandler(app.mm, app.configurator),
+	)
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v600.UpgradeName,
+		v600.CreateUpgradeHandler(app.mm, app.configurator),
+	)
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v601.UpgradeName,
+		v601.CreateUpgradeHandler(app.mm, app.SaKeeper, app.configurator),
+	)
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v700.UpgradeName,
+		v700.CreateUpgradeHandler(
+			app.mm, app.configurator,
+			app.SaKeeper,
+			app.ParamsKeeper,
+			app.ConsensusParamsKeeper,
+			*app.IBCKeeper,
+			app.AccountKeeper,
+		),
+	)
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v701.UpgradeName,
+		v701.CreateUpgradeHandler(
+			app.mm, app.configurator,
+			app.SaKeeper,
+			app.ParamsKeeper,
+			app.ConsensusParamsKeeper,
+			*app.IBCKeeper,
+			app.AccountKeeper,
+		),
+	)
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v702.UpgradeName,
+		v702.CreateUpgradeHandler(app.mm, app.configurator),
+	)
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v703.UpgradeName,
+		v703.CreateUpgradeHandler(app.mm, app.configurator),
+	)
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v081.UpgradeName,
+		v081.CreateUpgradeHandler(app.mm, app.configurator),
+	)
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		ibcupgrade.UpgradeName,
+		ibcupgrade.CreateUpgradeHandler(app.mm, app.configurator),
+	)
+
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v093.UpgradeName,
+		v093.CreateUpgradeHandler(app.mm, app.configurator),
+	)
+
 	// When a planned update height is reached, the old binary will panic
 	// writing on disk the height and name of the update that triggered it
 	// This will read that value, and execute the preparations for the upgrade.
@@ -1155,7 +1330,76 @@ func (app *App) setupUpgradeHandlers() {
 	var storeUpgrades *storetypes.StoreUpgrades
 
 	switch upgradeInfo.Name {
+	case v0_3_0.UpgradeName:
+		// no store upgrades in v0.3.0
 
+	case v0_3_1.UpgradeName:
+		// no store upgrades in v0.3.1
+
+	case v0_3_2.UpgradeName:
+		// no store upgrades in v0.3.2
+
+	case v0_3_3.UpgradeName:
+		// no store upgrades in v0.3.3
+
+	case v0_4_0.UpgradeName:
+		// no store upgrades in v0.4.0
+
+	case v0_4_1.UpgradeName:
+		// no store upgrades in v0.4.1
+
+	case v0_4_2.UpgradeName:
+		// no store upgrades in v0.4.2
+
+	case v0_4_4.UpgradeName:
+	// no store upgrades in v0.4.4
+
+	case v500.UpgradeName:
+	// no store upgrades in v0.5.0
+
+	case v501.UpgradeName:
+		storeUpgrades = &storetypes.StoreUpgrades{
+			//Added: []string{ibcmiddlewaretypes.StoreKey},
+		}
+	case v600.UpgradeName:
+		storeUpgrades = &storetypes.StoreUpgrades{
+			Added: []string{samoduletypes.StoreKey},
+		}
+
+	case v601.UpgradeName:
+		// no store upgrades in v0.6.
+
+	case v700.UpgradeName:
+		storeUpgrades = &storetypes.StoreUpgrades{
+			Added: []string{
+				consensusparamtypes.StoreKey,
+				crisistypes.StoreKey,
+			},
+		}
+
+	case v701.UpgradeName:
+		if ChainID == "xstaxy-1" {
+			storeUpgrades = &storetypes.StoreUpgrades{
+				Added: []string{
+					ibchookstypes.StoreKey,
+					samoduletypes.StoreKey,
+					consensusparamtypes.StoreKey,
+					crisistypes.StoreKey,
+				},
+			}
+		}
+
+	case v702.UpgradeName:
+	// no store upgrades in v0.7.2
+	case v703.UpgradeName:
+		// no store upgrades in v0.7.3
+
+	case v081.UpgradeName:
+		// no store upgrades in v0.8.1
+	case ibcupgrade.UpgradeName:
+		// no store upgrades in ibcupgrade
+	case v093.UpgradeName:
+		// no store upgrades in v0.9.3
 	}
 
 	if storeUpgrades != nil {

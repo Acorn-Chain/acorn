@@ -1,0 +1,15 @@
+syntax = "proto3";
+package acorn.smartaccount.v1beta1;
+
+import "gogoproto/gogo.proto";
+import "acorn/smartaccount/v1beta1/params.proto";
+// this line is used by starport scaffolding # genesis/proto/import
+
+option go_package = "github.com/acorn-chain/acorn/x/smartaccount/types/v1beta1";
+
+// GenesisState defines the smartaccount module's genesis state.
+message GenesisState {
+  Params params = 1 [(gogoproto.nullable) = false];
+  // this line is used by starport scaffolding # genesis/proto/state
+  uint64 smart_account_id = 2;
+}

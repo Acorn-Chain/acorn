@@ -28,6 +28,9 @@ import (
 	evmante "github.com/evmos/evmos/v18/app/ante/evm"
 	evmostypes "github.com/evmos/evmos/v18/types"
 	evmtypes "github.com/evmos/evmos/v18/x/evm/types"
+
+	smartaccount "github.com/acorn-chain/acorn/x/smartaccount"
+	smartaccountkeeper "github.com/acorn-chain/acorn/x/smartaccount/keeper"
 )
 
 // HandlerOptions extend the SDK's AnteHandler options by requiring the IBC
@@ -35,6 +38,7 @@ import (
 type HandlerOptions struct {
 	ante.HandlerOptions
 	WasmKeeper         wasmkeeper.Keeper
+	SmartAccountKeeper smartaccountkeeper.Keeper
 	IBCKeeper          *ibckeeper.Keeper
 	WasmConfig         *wasmTypes.WasmConfig
 	TXCounterStoreKey  storetypes.StoreKey
@@ -90,6 +94,7 @@ func (app *App) NewAnteHandler(txConfig client.TxConfig, wasmConfig wasmTypes.Wa
 					FeegrantKeeper:  app.FeeGrantKeeper,
 					SigGasConsumer:  ante.DefaultSigVerificationGasConsumer},
 				WasmKeeper:         app.WasmKeeper,
+				SmartAccountKeeper: app.SaKeeper,
 				IBCKeeper:          app.IBCKeeper,
 				WasmConfig:         &wasmConfig,
 				TXCounterStoreKey:  wasmKey,
@@ -149,11 +154,14 @@ func acornAnteHandler(options HandlerOptions) sdk.AnteHandler {
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
 		ante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
 		// SetPubKeyDecorator must be called before all signature verification decorators
+		smartaccount.NewSetPubKeyDecorator(options.SmartAccountKeeper),
 		ante.NewValidateSigCountDecorator(options.AccountKeeper),
 		ante.NewSigGasConsumeDecorator(options.AccountKeeper, sigGasConsumer),
 		ante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 
 		// new ante for account abstraction
+		smartaccount.NewSmartAccountDecorator(options.SmartAccountKeeper),
+		smartaccount.NewValidateAuthzTxDecorator(options.SmartAccountKeeper),
 		ante.NewIncrementSequenceDecorator(options.AccountKeeper),
 		ibcante.NewRedundantRelayDecorator(options.IBCKeeper),
 
