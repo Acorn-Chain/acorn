@@ -248,10 +248,10 @@ github.com/armon/go-metrics v0.4.1 h1:hR91U9KYmb6bLBYLQjyM+3j+rcd/UhE+G78SFnF8gJ
 github.com/armon/go-metrics v0.4.1/go.mod h1:E6amYzXo6aW1tqzoZGT755KkbgrJsSdpwZ+3JqfkOG4=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/aryann/difflib v0.0.0-20170710044230-e206f873d14a/go.mod h1:DAHtR1m6lCRdSC2Tm3DSWRPvIPr6xNKyeHdqDQSQT+A=
-github.com/acorn-chain/cometbft v0.37.4-acorn.2 h1:J+oiEiZp8AA6WBsNcWO1SMFci4wM/cTtvEfCY1Lp0sc=
-github.com/acorn-chain/cometbft v0.37.4-acorn.2/go.mod h1:Cmg5Hp4sNpapm7j+x0xRyt2g0juQfmB752ous+pA0G8=
-github.com/acorn-chain/evmos/v18 v18.1.0-acorn.2 h1:VsRVdgisIkNPpWU7hG1onM3emB580qj22W95Z1OdGzw=
-github.com/acorn-chain/evmos/v18 v18.1.0-acorn.2/go.mod h1:GfZd17bX4cerdRd0/LK6134akWx+Ef+MEvyaFtUrbYY=
+github.com/acorn-chain/cometbft v0.37.4-acorn.1 h1:1hSEtWbfqvOFz+MvxGZfAoGku1eg9gCOmqeC6/sV0hw=
+github.com/acorn-chain/cometbft v0.37.4-acorn.1/go.mod h1:Cmg5Hp4sNpapm7j+x0xRyt2g0juQfmB752ous+pA0G8=
+github.com/acorn-chain/evmos/v18 v18.1.0-acorn.1 h1:OEInUyj2eobkBTin7CJgrcgBA4qUPs3FBXON720N1ic=
+github.com/acorn-chain/evmos/v18 v18.1.0-acorn.1/go.mod h1:GfZd17bX4cerdRd0/LK6134akWx+Ef+MEvyaFtUrbYY=
 github.com/aws/aws-lambda-go v1.13.3/go.mod h1:4UKl9IzQMoD+QF79YdCuzCwp8VbmG4VAQwij/eHl5CU=
 github.com/aws/aws-sdk-go v1.27.0/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/aws/aws-sdk-go v1.44.122/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
