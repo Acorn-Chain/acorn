@@ -1,0 +1,14 @@
+syntax = "proto3";
+package acorn.acorn;
+
+// this line is used by starport scaffolding # genesis/proto/import
+import "gogoproto/gogo.proto";
+import "acorn/acorn/acorn.proto";
+
+option go_package = "github.com/acorn-chain/acorn/x/acorn/types";
+
+// GenesisState defines the acorn module's genesis state.
+message GenesisState {
+  // params defines all the parameters of related to acorn.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
