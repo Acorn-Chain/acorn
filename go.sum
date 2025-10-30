@@ -226,6 +226,10 @@ github.com/VictoriaMetrics/fastcache v1.6.0 h1:C/3Oi3EiBCqufydp1neRZkqcwmEiuRT9c
 github.com/VictoriaMetrics/fastcache v1.6.0/go.mod h1:0qHz5QP0GMX4pfmMA/zt5RgfNuXJrTP0zS7DqpHGGTw=
 github.com/VividCortex/gohistogram v1.0.0 h1:6+hBz+qvs0JOrrNhhmR7lFxo5sINxBCGXrdtl/UvroE=
 github.com/VividCortex/gohistogram v1.0.0/go.mod h1:Pf5mBqqDxYaXu3hDrrU+w6nw50o/4+TcAqDqk/vUH7g=
+github.com/acorn-chain/cometbft v0.37.4-acorn.1 h1:1hSEtWbfqvOFz+MvxGZfAoGku1eg9gCOmqeC6/sV0hw=
+github.com/acorn-chain/cometbft v0.37.4-acorn.1/go.mod h1:Cmg5Hp4sNpapm7j+x0xRyt2g0juQfmB752ous+pA0G8=
+github.com/acorn-chain/evmos/v18 v18.1.0-acorn.1 h1:OEInUyj2eobkBTin7CJgrcgBA4qUPs3FBXON720N1ic=
+github.com/acorn-chain/evmos/v18 v18.1.0-acorn.1/go.mod h1:GfZd17bX4cerdRd0/LK6134akWx+Ef+MEvyaFtUrbYY=
 github.com/adlio/schema v1.3.3 h1:oBJn8I02PyTB466pZO1UZEn1TV5XLlifBSyMrmHl/1I=
 github.com/aead/siphash v1.0.1/go.mod h1:Nywa3cDsYNNK3gaciGTWPwHt0wlpNV15vwmswBAUSII=
 github.com/afex/hystrix-go v0.0.0-20180502004556-fa1af6a1f4f5/go.mod h1:SkGFH1ia65gfNATL8TAiHDNxPzPdmEL5uirI2Uyuz6c=
@@ -248,10 +252,6 @@ github.com/armon/go-metrics v0.4.1 h1:hR91U9KYmb6bLBYLQjyM+3j+rcd/UhE+G78SFnF8gJ
 github.com/armon/go-metrics v0.4.1/go.mod h1:E6amYzXo6aW1tqzoZGT755KkbgrJsSdpwZ+3JqfkOG4=
 github.com/armon/go-radix v0.0.0-20180808171621-7fddfc383310/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
 github.com/aryann/difflib v0.0.0-20170710044230-e206f873d14a/go.mod h1:DAHtR1m6lCRdSC2Tm3DSWRPvIPr6xNKyeHdqDQSQT+A=
-github.com/acorn-chain/cometbft v0.37.4-acorn.1 h1:1hSEtWbfqvOFz+MvxGZfAoGku1eg9gCOmqeC6/sV0hw=
-github.com/acorn-chain/cometbft v0.37.4-acorn.1/go.mod h1:Cmg5Hp4sNpapm7j+x0xRyt2g0juQfmB752ous+pA0G8=
-github.com/acorn-chain/evmos/v18 v18.1.0-acorn.1 h1:OEInUyj2eobkBTin7CJgrcgBA4qUPs3FBXON720N1ic=
-github.com/acorn-chain/evmos/v18 v18.1.0-acorn.1/go.mod h1:GfZd17bX4cerdRd0/LK6134akWx+Ef+MEvyaFtUrbYY=
 github.com/aws/aws-lambda-go v1.13.3/go.mod h1:4UKl9IzQMoD+QF79YdCuzCwp8VbmG4VAQwij/eHl5CU=
 github.com/aws/aws-sdk-go v1.27.0/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/aws/aws-sdk-go v1.44.122/go.mod h1:y4AeaBuwd2Lk+GepC1E9v0qOiTws0MIWAX4oIKwKHZo=
@@ -370,8 +370,8 @@ github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4x
 github.com/cosmos/gogogateway v1.2.0 h1:Ae/OivNhp8DqBi/sh2A8a1D0y638GpL3tkmLQAiKxTE=
 github.com/cosmos/gogogateway v1.2.0/go.mod h1:iQpLkGWxYcnCdz5iAdLcRBSw3h7NXeOkZ4GUkT+tbFI=
 github.com/cosmos/gogoproto v1.4.2/go.mod h1:cLxOsn1ljAHSV527CHOtaIP91kK6cCrZETRBrkzItWU=
-github.com/cosmos/gogoproto v1.4.10 h1:QH/yT8X+c0F4ZDacDv3z+xE3WU1P1Z3wQoLMBRJoKuI=
-github.com/cosmos/gogoproto v1.4.10/go.mod h1:3aAZzeRWpAwr+SS/LLkICX2/kDFyaYVzckBDzygIxek=
+github.com/cosmos/gogoproto v1.7.0 h1:79USr0oyXAbxg3rspGh/m4SWNyoz/GLaAh0QlCe2fro=
+github.com/cosmos/gogoproto v1.7.0/go.mod h1:yWChEv5IUEYURQasfyBW5ffkMHR/90hiHgbNgrtp4j0=
 github.com/cosmos/iavl v0.21.0-alpha.1.0.20230904092046-df3db2d96583 h1:3Matt7/LjZiZkIBPalYazOZcw2B05Ch14dU5TJyqJEc=
 github.com/cosmos/iavl v0.21.0-alpha.1.0.20230904092046-df3db2d96583/go.mod h1:WO7FyvaZJoH65+HFOsDir7xU9FWk2w9cHXNW1XHcl7A=
 github.com/cosmos/ibc-apps/modules/ibc-hooks/v7 v7.0.0-20230803181732-7c8f814d3b79 h1:pCxyhIxgWTabAQC5UerkITraHG3SwajdLKKMCFDWCv4=
