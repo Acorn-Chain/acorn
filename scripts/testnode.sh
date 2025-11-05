@@ -21,13 +21,19 @@ acornd config chain-id $CHAINID
 acornd keys add $KEY --keyring-backend $KEYRING --algo $KEYALGO
 
 # Set moniker and chain-id for Evmos (Moniker can be anything, chain-id must be an integer)
-acornd init $MONIKER --chain-id $CHAINID 
+acornd init $MONIKER --chain-id $CHAINID
+
+# Change denom from stake to uacorn in genesis file
+sed -i'' -e 's/"stake"/"uacorn"/g' ~/.acorn/config/genesis.json
+
+# Enable evm rpc API
+sed -i'' -e "286s/enable = false/enable = true/" ~/.acorn/config/app.toml
 
 # Allocate genesis accounts (cosmos formatted addresses)
-acornd add-genesis-account $KEY 100000000000000000000000000stake --keyring-backend $KEYRING
+acornd add-genesis-account $KEY 100000000000000000000000000uacorn --keyring-backend $KEYRING
 
 # Sign genesis transaction
-acornd gentx $KEY 1000000000000000000000stake --keyring-backend $KEYRING --chain-id $CHAINID
+acornd gentx $KEY 1000000000000000000000uacorn --keyring-backend $KEYRING --chain-id $CHAINID
 
 # Collect genesis tx
 acornd collect-gentxs
@@ -40,4 +46,4 @@ if [[ $1 == "pending" ]]; then
 fi
 
 # Start the node (remove the --pruning=nothing flag if historical queries are not needed)
-acornd start --pruning=nothing  --minimum-gas-prices=0.0001stake
+acornd start --pruning=nothing  --minimum-gas-prices=0.0001acorn
