@@ -22,22 +22,11 @@ RUN LEDGER_ENABLED=false BUILD_TAGS=muslc LINK_STATICALLY=true make build
 RUN echo "Ensuring binary is statically linked ..." \
   && (file /acorn/build/acornd | grep "statically linked")
 
-FROM golang:1.21-bullseye as ignite
-
-RUN curl https://get.ignite.com/cli@v0.27.1! | bash
-
-COPY . /acorn
-WORKDIR /acorn
-
-COPY config.yml config.yml
-RUN ignite chain init
-
 FROM alpine:3.17
 
-COPY --from=ignite /root/.acorn /root/.acorn
 COPY --from=go-builder /acorn/build/acornd /usr/bin/acornd
 
 # rest grpc p2p rpc
-EXPOSE 1317 9090 26656 26657
+EXPOSE 1317 8545 9090 26656 26657
 
 CMD ["/usr/bin/acornd", "start"]
