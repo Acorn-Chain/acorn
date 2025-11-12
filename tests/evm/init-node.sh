@@ -1,6 +1,6 @@
 #!/bin/bash
 
-CHAINID="${CHAIN_ID:-acorndev_9000-1}"
+CHAINID="${CHAIN_ID:-acorn_9332-1}"
 MONIKER="localtestnet"
 KEYRING="test"      # remember to change to other types of keyring like 'file' in-case exposing to outside world, otherwise your balance will be wiped quickly. The keyring test does not require private key to steal tokens from you
 KEYALGO="secp256k1" #gitleaks:allow
@@ -125,11 +125,11 @@ acornd add-genesis-account "$(acornd keys show "$USER2_KEY" -a --keyring-backend
 acornd add-genesis-account "$(acornd keys show "$USER3_KEY" -a --keyring-backend "$KEYRING")" 1000000000uacorn --keyring-backend "$KEYRING"
 acornd add-genesis-account "$(acornd keys show "$USER4_KEY" -a --keyring-backend "$KEYRING")" 1000000000uacorn --keyring-backend "$KEYRING"
 
-acornd add-genesis-account "acorn1cml96vmptgw99syqrrz8az79xer2pcgp7z8pyz" 2000000000uacorn
+acornd add-genesis-account "acorn185tq49mv3z4djar3k874rju6cnm3nvrhfma3w9" 2000000000uacorn
 
 # Update total supply with claim values
 # Bc is required to add this big numbers
-total_supply=$(bc <<<"$amount_to_claim+$validators_supply")
+# total_supply=$(bc <<<"$amount_to_claim+$validators_supply")
 total_supply=100006000000000
 jq -r --arg total_supply "$total_supply" '.app_state.bank.supply[1].amount=$total_supply' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 jq -r '.app_state.bank.supply[1].denom="uacorn"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
