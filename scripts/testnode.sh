@@ -26,8 +26,17 @@ acornd init $MONIKER --chain-id $CHAINID
 # Change denom from stake to uacorn in genesis file
 sed -i'' -e 's/"stake"/"uacorn"/g' ~/.acorn/config/genesis.json
 
+# Change evm denom from aevmos to uacorn in genesis file
+sed -i'' -e 's/aevmos/aacorn/g' ~/.acorn/config/genesis.json
+
 # Enable evm rpc API
 sed -i'' -e "286s/enable = false/enable = true/" ~/.acorn/config/app.toml
+
+# Enable API
+sed -i'' -e "119s/enable = false/enable = true/" ~/.acorn/config/app.toml
+
+# Enable swagger API
+sed -i'' -e "122s/swagger = false/swagger = true/" ~/.acorn/config/app.toml
 
 # Allocate genesis accounts (cosmos formatted addresses)
 acornd add-genesis-account $KEY 10000000000000000uacorn --keyring-backend $KEYRING
@@ -46,4 +55,4 @@ if [[ $1 == "pending" ]]; then
 fi
 
 # Start the node (remove the --pruning=nothing flag if historical queries are not needed)
-acornd start --pruning=nothing  --minimum-gas-prices=0.0001acorn
+acornd start --pruning=nothing  --minimum-gas-prices=10uacorn
