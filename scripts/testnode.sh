@@ -30,10 +30,10 @@ sed -i'' -e 's/"stake"/"uacorn"/g' ~/.acorn/config/genesis.json
 sed -i'' -e "286s/enable = false/enable = true/" ~/.acorn/config/app.toml
 
 # Allocate genesis accounts (cosmos formatted addresses)
-acornd add-genesis-account $KEY 100000000000000000000000000uacorn --keyring-backend $KEYRING
+acornd add-genesis-account $KEY 10000000000000000uacorn --keyring-backend $KEYRING
 
 # Sign genesis transaction
-acornd gentx $KEY 1000000000000000000000uacorn --keyring-backend $KEYRING --chain-id $CHAINID
+acornd gentx $KEY 100000000000000uacorn --keyring-backend $KEYRING --chain-id $CHAINID
 
 # Collect genesis tx
 acornd collect-gentxs
