@@ -48,6 +48,7 @@ acornd init "$MONIKER" --chain-id "$CHAINID"
 
 # Change parameter token denominations to uacorn
 jq '.app_state.staking.params.bond_denom="uacorn"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq '.app_state.mint.params.mint_denom="uacorn"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 jq '.app_state.crisis.constant_fee.denom="uacorn"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 jq '.app_state.gov.deposit_params.min_deposit[0].denom="uacorn"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 jq '.app_state.gov.deposit_params.min_deposit[0].amount="1000000"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
@@ -79,13 +80,13 @@ sed -i.bak 's/create_empty_blocks = true/create_empty_blocks = false/g' "$CONFIG
 
 # Allocate genesis accounts (cosmos formatted addresses)
 acornd add-genesis-account "$(acornd keys show "$VAL_KEY" -a --keyring-backend "$KEYRING")" 100000000000000uacorn --keyring-backend "$KEYRING"
+
 acornd add-genesis-account "acorn185tq49mv3z4djar3k874rju6cnm3nvrhfma3w9" 2000000000uacorn
 
 # Update total supply with claim values
 total_supply=100002000000000
-jq -r --arg total_supply "$total_supply" '.app_state.bank.supply[1].amount=$total_supply' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
-jq -r '.app_state.bank.supply[1].denom="uacorn"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
-jq -r '.app_state.bank.supply[0].amount="100000000"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq -r --arg total_supply "$total_supply" '.app_state.bank.supply[0].amount=$total_supply' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq -r '.app_state.bank.supply[0].denom="uacorn"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
 # set list of evm precompile contracts
 jq '.app_state.evm.params.active_precompiles=[]' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
@@ -106,9 +107,6 @@ sed -i.bak 's/localhost/0.0.0.0/g' "$APP_TOML"
 
 # use timeout_commit 1s to make test faster
 sed -i.bak 's/timeout_commit = "3s"/timeout_commit = "1s"/g' "$CONFIG_TOML"
-
-# Change denom from stake to uacorn in genesis file
-sed -i.bak 's/"stake"/"uacorn"/g' "$GENESIS"
 
 # Sign genesis transaction
 acornd gentx "$VAL_KEY" 1000000000uacorn --gas-prices ${BASEFEE}uacorn --keyring-backend "$KEYRING" --chain-id "$CHAINID"
