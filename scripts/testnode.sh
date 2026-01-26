@@ -1,48 +1,124 @@
-KEY="mykey"
-CHAINID="acorn_9332-1"
+#!/bin/bash
+
+CHAINID="${CHAIN_ID:-acorn_9332-1}"
 MONIKER="localtestnet"
-KEYALGO="secp256k1"
-KEYRING="test"
-LOGLEVEL="info"
+KEYRING="test"      # remember to change to other types of keyring like 'file' in-case exposing to outside world, otherwise your balance will be wiped quickly. The keyring test does not require private key to steal tokens from you
+KEYALGO="secp256k1" #gitleaks:allow
+LOGLEVEL="debug"
 # to trace evm
 #TRACE="--trace"
 TRACE=""
+PRUNING="default"
+#PRUNING="custom"
+
+CHAINDIR="$HOME/.acorn"
+GENESIS="$CHAINDIR/config/genesis.json"
+TMP_GENESIS="$CHAINDIR/config/tmp_genesis.json"
+APP_TOML="$CHAINDIR/config/app.toml"
+CONFIG_TOML="$CHAINDIR/config/config.toml"
+
+rm -r $CHAINDIR/*
+
+# feemarket params basefee: 10^8
+BASEFEE=100000000
+
+VAL_KEY="mykey"
 
 # validate dependencies are installed
-command -v jq > /dev/null 2>&1 || { echo >&2 "jq not installed. More info: https://stedolan.github.io/jq/download/"; exit 1; }
+command -v jq >/dev/null 2>&1 || {
+  echo >&2 "jq not installed. More info: https://stedolan.github.io/jq/download/"
+  exit 1
+}
 
-# remove existing daemon
-rm -rf ~/.acorn*
+# used to exit on first error (any non-zero exit code)
+set -e
 
-acornd config keyring-backend $KEYRING
-acornd config chain-id $CHAINID
+# Set client config
+acornd config keyring-backend "$KEYRING"
+acornd config chain-id "$CHAINID"
 
-# if $KEY exists it should be deleted
-acornd keys add $KEY --keyring-backend $KEYRING --algo $KEYALGO
+# Add keyring
+acornd keys add "$VAL_KEY" --keyring-backend "$KEYRING" --algo "$KEYALGO"
+
+# Store the validator address in a variable to use it later
+node_address=$(acornd keys show -a "$VAL_KEY")
 
 # Set moniker and chain-id for Evmos (Moniker can be anything, chain-id must be an integer)
-acornd init $MONIKER --chain-id $CHAINID
+acornd init "$MONIKER" --chain-id "$CHAINID"
 
-# Change denom from stake to uacorn in genesis file
-sed -i'' -e 's/"stake"/"uacorn"/g' ~/.acorn/config/genesis.json
+# Change parameter token denominations to uacorn
+jq '.app_state.staking.params.bond_denom="uacorn"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq '.app_state.crisis.constant_fee.denom="uacorn"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq '.app_state.gov.deposit_params.min_deposit[0].denom="uacorn"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq '.app_state.gov.deposit_params.min_deposit[0].amount="1000000"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq '.app_state.gov.params.min_deposit[0].denom="uacorn"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq '.app_state.gov.params.min_deposit[0].amount="1000000"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq '.app_state.evm.params.evm_denom="aacorn"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq '.app_state.inflation.params.mint_denom="uacorn"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
-# Change evm denom from aevmos to uacorn in genesis file
-sed -i'' -e 's/aevmos/aacorn/g' ~/.acorn/config/genesis.json
+# set gov proposing && voting period
+jq '.app_state.gov.deposit_params.max_deposit_period="10s"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq '.app_state.gov.voting_params.voting_period="10s"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
-# Enable evm rpc API
-sed -i'' -e "286s/enable = false/enable = true/" ~/.acorn/config/app.toml
+# When upgrade to cosmos-sdk v0.47, use gov.params to edit the deposit params
+# check if the 'params' field exists in the genesis file
+if jq '.app_state.gov.params != null' "$GENESIS" | grep -q "true"; then
+  jq '.app_state.gov.params.min_deposit[0].denom="uacorn"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+  jq '.app_state.gov.params.max_deposit_period="10s"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+  jq '.app_state.gov.params.voting_period="10s"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+fi
 
-# Enable API
-sed -i'' -e "119s/enable = false/enable = true/" ~/.acorn/config/app.toml
+# Set gas limit in genesis
+jq '.consensus_params.block.max_gas="10000000"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
 
-# Enable swagger API
-sed -i'' -e "122s/swagger = false/swagger = true/" ~/.acorn/config/app.toml
+# Set base fee in genesis
+jq '.app_state["feemarket"]["params"]["base_fee"]="'${BASEFEE}'"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+
+# disable produce empty block
+sed -i.bak 's/create_empty_blocks = true/create_empty_blocks = false/g' "$CONFIG_TOML"
 
 # Allocate genesis accounts (cosmos formatted addresses)
-acornd add-genesis-account $KEY 10000000000000000uacorn --keyring-backend $KEYRING
+acornd add-genesis-account "$(acornd keys show "$VAL_KEY" -a --keyring-backend "$KEYRING")" 100000000000000uacorn --keyring-backend "$KEYRING"
+acornd add-genesis-account "acorn185tq49mv3z4djar3k874rju6cnm3nvrhfma3w9" 2000000000uacorn
+
+# Update total supply with claim values
+total_supply=100002000000000
+jq -r --arg total_supply "$total_supply" '.app_state.bank.supply[1].amount=$total_supply' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq -r '.app_state.bank.supply[1].denom="uacorn"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+jq -r '.app_state.bank.supply[0].amount="100000000"' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+
+# set list of evm precompile contracts
+jq '.app_state.evm.params.active_precompiles=[]' "$GENESIS" >"$TMP_GENESIS" && mv "$TMP_GENESIS" "$GENESIS"
+
+# set custom pruning settings
+if [ "$PRUNING" = "custom" ]; then
+  sed -i.bak 's/pruning = "default"/pruning = "custom"/g' "$APP_TOML"
+  sed -i.bak 's/pruning-keep-recent = "0"/pruning-keep-recent = "2"/g' "$APP_TOML"
+  sed -i.bak 's/pruning-interval = "0"/pruning-interval = "10"/g' "$APP_TOML"
+  sed -i.bak 's/swagger = false/swagger = true/g' "$APP_TOML"
+fi
+
+# make sure the localhost IP is 0.0.0.0
+sed -i.bak 's/localhost/0.0.0.0/g' "$CONFIG_TOML"
+sed -i.bak 's/127.0.0.1/0.0.0.0/g' "$CONFIG_TOML"
+sed -i.bak 's/127.0.0.1/0.0.0.0/g' "$APP_TOML"
+sed -i.bak 's/localhost/0.0.0.0/g' "$APP_TOML"
+
+# use timeout_commit 1s to make test faster
+sed -i.bak 's/timeout_commit = "3s"/timeout_commit = "1s"/g' "$CONFIG_TOML"
+
+# Change denom from stake to uacorn in genesis file
+sed -i.bak 's/"stake"/"uacorn"/g' "$GENESIS"
 
 # Sign genesis transaction
-acornd gentx $KEY 100000000000000uacorn --keyring-backend $KEYRING --chain-id $CHAINID
+acornd gentx "$VAL_KEY" 1000000000uacorn --gas-prices ${BASEFEE}uacorn --keyring-backend "$KEYRING" --chain-id "$CHAINID"
+
+# Enable the APIs for the tests to be successful
+sed -i.bak '119s/enable = false/enable = true/g' "$APP_TOML"
+sed -i.bak 's/swagger = false/swagger = true/g' "$APP_TOML"
+
+# Don't enable memiavl by default
+grep -q -F '[memiavl]' "$APP_TOML" && sed -i.bak '/\[memiavl\]/,/^\[/ s/enable = true/enable = false/' "$APP_TOML"
 
 # Collect genesis tx
 acornd collect-gentxs
@@ -50,9 +126,10 @@ acornd collect-gentxs
 # Run this to ensure everything worked and that the genesis file is setup correctly
 acornd validate-genesis
 
-if [[ $1 == "pending" ]]; then
-  echo "pending mode is on, please wait for the first block committed."
-fi
-
-# Start the node (remove the --pruning=nothing flag if historical queries are not needed)
-acornd start --pruning=nothing  --minimum-gas-prices=10uacorn
+# Start the node
+acornd start "$TRACE" \
+  --log_level $LOGLEVEL \
+  --minimum-gas-prices=0.0001uacorn \
+  --json-rpc.api eth,txpool,personal,net,debug,web3 \
+  --json-rpc.enable
+# --chain-id "$CHAINID"
